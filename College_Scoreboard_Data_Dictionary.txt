@@ -1,0 +1,112 @@
+| VARIABLE NAME		| NAME OF DATA ELEMENT													 | API data type	| INDEX		| dev-category	| developer-friendly name			| Note	|
+|-----------------------|------------------------------------------------------------------------------------------------------------------------|----------------------|---------------|---------------|-----------------------------------------------|-------|
+| UNITID		| Unit ID for institution												 | integer		|		| root 		| id						|	|
+| OPEID			| 8-digit OPE ID for institution											 | string		| varchar(10)	| root 		| ope8_id					|	|
+| INSTNM		| Institution name													 | autocomplete		| fulltext	| school 	| name						|	|
+| CITY			| City															 | autocomplete		| varchar(200)	| school	| city						|	|
+| Year 			| Year															 | integer		| integer	| school	| year						|	|
+| UGDS 			| Enrollment of undergraduate certificate/degree-seeking students							 | integer		| integer	| student	| size						| 1	|
+| MAIN 			| Flag for main campus													 | integer		| tinyint	| school	| main_campus					|	|
+| NUMBRANCH 		| Number of branch campuses												 | integer		| tinyint	| school	| branches					|	|
+| HIGHDEG 		| Highest degree awarded												 | integer		| tinyint	| school	| degrees_awarded.highes			|	|
+| REGION 		| Region (IPEDS)													 | integer		| integer	| school	| region_id					|	|
+| LOCALE 		| Locale of institution													 | integer		| integer	| school	| locale					|	|
+| LOCALE2 		| Degree of urbanization of institution											 | integer		| integer	| school	| degree_urbanization				|	|
+| CCSIZSET 		| Carnegie Classification -- size and setting										 | integer		|		| school	| carnegie_size_setting				|	|
+| PCTPELL 		| Percentage of undergraduates who receive a Pell Grant									 | float		|		| aid		| pell_grant_rate				| 5	|
+| AVGFACSAL 		| Average faculty salary												 | integer		|		| school	| faculty_salary				| 3	|
+| PFTFAC 		| Proportion of faculty that is full-time										 | float		|		| school	| ft_faculty_rate				| 4	|
+| PRGMOFR 		| Number of programs offered												 | integer		|		| academics	| program_reporter.programs_offered		|	|
+| BOOKSUPPLY 		| Cost of attendance: estimated books and supplies									 | integer		|		| cost		| booksupply					|	|
+| ROOMBOARD_ON 		| Cost of attendance: on-campus room and board										 | integer		|		| cost		| roomboard.oncampus				|	|
+| ROOMBOARD_OFF 	| Cost of attendance: off-campus room and board										 | integer		|		| cost		| roomboard.offcampus				|	|
+| OTHEREXPENSE_ON 	| Cost of attendance: on-campus other expenses										 | integer		|		| cost		| otherexpense.oncampus				|	|
+| OTHEREXPENSE_OFF 	| Cost of attendance: off-campus other expenses										 | integer		|		| cost		| otherexpense.offcampus			|	|
+| ADMCON7 		| Test score requirements for admission											 | integer		| tinyint	| admissions	| test_requirements				|	|
+| MDCOST_ALL 		| Overall median for average net price											 | float		| float		| cost		| avg_net_price.consumer.overall_median		|	|
+| MDEARN_ALL 		| Overall median earnings of students working and not enrolled 10 years after entry					 | float		| float		| earnings	| 10_yrs_after_entry.consumer.overall_median	|	|
+| UGDS_MEN 		| Total share of enrollment of undergraduate degree-seeking students who are men					 | float		|		| student	| demographics.men				|	|
+| UGDS_WOMEN 		| Total share of enrollment of undergraduate degree-seeking students who are women					 | float		|		| student	| demographics.women				|	|
+| ADM_RATE 		| Admission rate													 | float		| float		| admissions	| admission_rate.overall			|	|
+| SAT_AVG 		| Average SAT equivalent score of students admitted									 | float		| float		| admissions	| sat_scores.average.overall			|	|
+| ACTCMMID 		| Midpoint of the ACT cumulative score											 | float		| float		| admissions	| act_scores.midpoint.cumulative		|	|
+| RET_FT4 		| First-time, full-time student retention rate at four-year institutions						 | float		|		| student	| retention_rate.four_year.full_time		|	|
+| C150_4 		| Completion rate for first-time, full-time students at four-year institutions (150% of expected time to completion)	 | float		|		| completion	| completion_rate_4yr_150nt			| 6	|
+| MD_EARN_WNE_P10 	| Median earnings of students working and not enrolled 10 years after entry						 | integer		| integer	| earnings	| 10_yrs_after_entry.median			|	|
+| TUITIONFEE_IN		| In-state tuition and fees												 | integer		| integer	| cost		| tuition.in_state				|	|
+| TUITIONFEE_OUT	| Out-of-state tuition and fees												 | integer		| integer	| cost		| tuition.out_of_state				|	|
+| UGDS_WHITE 		| Total share of enrollment of undergraduate degree-seeking students who are white					 | float		|		| student	| demographics.race_ethnicity.white		| 2	|
+| UGDS_BLACK 		| Total share of enrollment of undergraduate degree-seeking students who are black					 | float		|		| student	| demographics.race_ethnicity.black		| 2	|
+| UGDS_HISP 		| Total share of enrollment of undergraduate degree-seeking students who are Hispanic					 | float		|		| student	| demographics.race_ethnicity.hispanic		| 2	|
+| UGDS_ASIAN 		| Total share of enrollment of undergraduate degree-seeking students who are Asian					 | float		|		| student	| demographics.race_ethnicity.asian		| 2	|
+| OPENADMP 		| Open admissions policy indicator											 | integer		|		| school	| open_admissions_policy			|	|
+
+Notes:
+1) Not available in 2000-2001 datafile
+2) Not available in all datafiles due to changing race/ethnicity category definitions over time. See data_cohort_map
+3) Average faculty salary per month, calculated from the IPEDS Human Resources component. This metric is calculated as the total salary outlays divided by the number of months worked for all full-time nonmedical instructional staff. Prior to the 2011-12
+   academic year, when months worked were reported in groups, the value for 9-10 months is estimated as 9.5 months and the value for 11-12 months is estimated as 11.5 months. Values prior to the 2003-04 academic year are limited to degree-granting 
+   institutions for consistency with values in subsequent academic years.
+4) Proportion of faculty that are employed full time, calculated from the IPEDS Human Resources component. This metric is calculated as the number of full-time nonmedical faculty divided by the total number of nonmedical faculty. Proportions are expressed 
+   as decimals rounded to four decimal places, so, for example, 0.1234 equals 12.34 percent.
+5) The proportion of undergraduates who received a Pell grant in the academic year, calculated from the IPEDS Student Financial Aid component. This metric is calculated by IPEDS as the quotient of the number of Pell grant recipients divided by the count of
+   all undergraduates for either a fall enrollment cohort (for institutions that primarily follow an academic year calendar system) or a full-year enrollment cohort (for institutions that primarily follow a continuous enrollment or program-based calendar 
+   system). Proportions are expressed as decimals rounded to four decimal places, so, for example, 0.1234 equals 12.34 percent. This metric is not available prior to the 2008-09 academic year.
+6) The proportion of full-time, first-time, degree/certificate-seeking undergraduates who completed a degree or certificate at the institution within 150 percent of normal time, calculated from the IPEDS Graduation Rates component. Separate metrics are
+   calculated for 4-year institutions and less-than-4-year institutions. This metric is calculated as the number of full-time, first-time, degree/certificate-seeking undergraduates who completed a degree or certificate divided by the number of full-time,
+   first-time, degree/certificate-seeking undergraduates in the corresponding completion rate cohort (D150_4, D150_L4). For full-time, first-time, bachelor's degree-seeking undergraduates, 150 percent of normal time is typically 6 years, and for full-time,
+   first-time, associate's degree-seeking undergraduates it is typically 3 years. For full-time, first-time, certificate-seeking undergraduates, the normal time period varies by the length of the program (for example, 9 months for a certificate with a
+   normal completion time of 6 months). Proportions are expressed as decimals rounded to four decimal places, so, for example, 0.1234 equals 12.34 percent. Pooled figures include two cohorts of students.
+7) The proportion of full-time, first-time, degree/certificate-seeking undergraduates who were enrolled at the institution in the fall 1 year after starting at the institution, calculated from the IPEDS Fall Enrollment component. Separate metrics are
+   calculated for 4-year institutions and less-than-4-year institutions. The retention rate is calculated as the number of full-time, first-time, degree/certificate-seeking undergraduates enrolled in the fall of the prior academic year that are enrolled
+   in the fall term of the current academic year divided by the number of full-time, first-time, degree/certificate-seeking undergraduates enrolled in the fall of the prior academic year. For 4-year institutions, this metric is limited to full-time,
+   first-time, bachelor's or equivalent degree-seeking undergraduate students. For less-than-4-year institutions, this metric applies to all full-time, first-time, degree/certificate-seeking undergraduate students. This metric is not available prior to
+   the 2004-05 academic year. Proportions are expressed as decimals rounded to four decimal places, so, for example, 0.1234 equals 12.34 percent.
+
+Predictor Variables:
+- INSTNM
+- CITY
+- Year
+- MAIN
+- NUMBRANCH
+- HIGHDEG
+- REGION
+- LOCALE
+- LOCALE2 (All NAs)
+- CCSIZSET
+- PCTPELL
+- AVGFACSAL
+- PFTFAC
+- PRGMOFR (All NAs)
+- BOOKSUPPLY
+- ROOMBOARD_ON
+- ROOMBOARD_OFF
+- OTHEREXPENSE_ON
+- OTHEREXPENSE_OFF
+- ADMCON7
+- MDCOST_ALL (All NAs)
+- MDEARN_ALL (All NAs)
+- MD_EARN_WNE_P10
+- OPENADMP
+
+(Potential) Response Variables:
+- Quantity
+	- UGDS
+	- UGDS_MEN
+	- UGDS_WOMEN
+	- UGDS_WHITE
+	- UGDS_BLACK
+	- UGDS_HISP
+	- UGDS_ASIAN
+- Quality
+	- ADM_RATE
+	- SAT_AVG
+	- ACTCMMID
+- Student Success
+	- RET_FT4
+	- C150_4
+- Cost (might also be predictors)
+	- TUITIONFEE_IN
+	- TUITIONFEE_OUT
+
+
