@@ -43,6 +43,16 @@ for city in list(scorecard_df.CITY.unique()):
         locale = 0
     scorecard_df.loc[scorecard_df.CITY == city, "LOCALE"] = locale
 
+# Assume CCSIZSET based on INSTNM.
+# All the CCSIZSET data present is from the 2022 year, so we don't
+# have to to worry about changes year-to-year
+for name in list(scorecard_df.INSTNM.unique()):
+    try:
+        ccsizset = int(scorecard_df.loc[(scorecard_df.INSTNM == name) & (scorecard_df.Year == 2022), "CCSIZSET"])
+    except:
+        ccsizset = 0
+    scorecard_df.loc[scorecard_df.INSTNM == name, "CCSIZSET"] = locale
+
 
 
 ####################
