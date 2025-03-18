@@ -28,14 +28,21 @@ new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_a
                "Nine_years_ago", "Ten_years_ago", "Eleven_year_ago", "Twelve_years_ago",
                "Thirteen_years_ago", "Fourteen_years_ago", "Fifteen_years_ago", "Sixteen_years_ago",
                "Seventeen_years_ago", "Eighteen_years_ago", "Nineteen_years_ago", "Twenty_years_ago"]
+# Years correspond to students in the <Year-1>-<Year> school year,
+# so we want to link it up to 2 years prior for the first year.
 for i in range(20):
-    scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 1)
+    scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
 
 
 
 ####################
 # Merge dataframes #
 ####################
+############
+############
+############
+############
+############
 
 # Merge in the first year to simplify naming.
 # We'll take it out later.
