@@ -48,7 +48,7 @@ for (col in colnames(df[1:36])) {
     paste(col, ": ", ., "%\n", sep = "") %>%
     cat()
 }
-# Among non-NA values, we lose 15.16% of values from 20 years ago
+# Among non-NA values, we lose 15.18% of values from 20 years ago
 # For other columns, here are the results:
 # UNITID: 0%
 # OPEID: 0%
@@ -60,7 +60,7 @@ for (col in colnames(df[1:36])) {
 # NUMBRANCH: 0%
 # HIGHDEG: 0%
 # REGION: 0%
-# LOCALE: 96.13%
+# LOCALE: 0%
 # CCSIZSET: 96.13%
 # PCTPELL: 43.07%
 # AVGFACSAL: 0.11%
@@ -152,7 +152,7 @@ for (col in colnames(df[1:31])) {
 # NUMBRANCH: 0%; 0%
 # HIGHDEG: 0%; 0%
 # REGION: 0%; 0%
-# LOCALE: 98.85%; 95.93%
+# LOCALE: 0%; 0%
 # CCSIZSET: 98.85%; 95.93%
 # PCTPELL: 64.37%; 40.47%
 # AVGFACSAL: 10.34%; 3.93%
