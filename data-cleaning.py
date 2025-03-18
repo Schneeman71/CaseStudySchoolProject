@@ -33,16 +33,21 @@ new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_a
 for i in range(20):
     scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
 
+# Assume LOCALE based on CITY. 
+# All the LOCALE data present is from the 2022 year, so we don't
+# have to to worry about changes year-to-year
+for city in list(scorecard_df.CITY.unique()):
+    try:
+        locale = int(scorecard_df.loc[(scorecard_df.CITY == city) & (scorecard_df.Year == 2022), "LOCALE"])
+    except:
+        locale = 0
+    scorecard_df.loc[scorecard_df.CITY == city, "LOCALE"] = locale
+
 
 
 ####################
 # Merge dataframes #
 ####################
-############
-############
-############
-############
-############
 
 # Merge in the first year to simplify naming.
 # We'll take it out later.
