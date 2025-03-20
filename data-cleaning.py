@@ -35,10 +35,10 @@ for i in range(20):
 
 # Assume LOCALE based on CITY. 
 # All the LOCALE data present is from the 2022 year, so we don't
-# have to to worry about changes year-to-year
+# have to worry about changes year-to-year
 for city in list(scorecard_df.CITY.unique()):
     try:
-        locale = int(scorecard_df.loc[(scorecard_df.CITY == city) & (scorecard_df.Year == 2022), "LOCALE"])
+        locale = int(scorecard_df.loc[(scorecard_df.CITY == city) & (scorecard_df.Year == 2022), "LOCALE"].values[0])
     except:
         locale = 0
     scorecard_df.loc[scorecard_df.CITY == city, "LOCALE"] = locale
@@ -48,7 +48,7 @@ for city in list(scorecard_df.CITY.unique()):
 # have to to worry about changes year-to-year
 for name in list(scorecard_df.INSTNM.unique()):
     try:
-        ccsizset = int(scorecard_df.loc[(scorecard_df.INSTNM == name) & (scorecard_df.Year == 2022), "CCSIZSET"])
+        ccsizset = int(scorecard_df.loc[(scorecard_df.INSTNM == name) & (scorecard_df.Year == 2022), "CCSIZSET"].values[0])
     except:
         ccsizset = 0
     scorecard_df.loc[scorecard_df.INSTNM == name, "CCSIZSET"] = locale
@@ -75,16 +75,16 @@ for col in new_columns:
                   right_on = ["year", "scorecard_name"],
                   suffixes = (None, "_" + col))
     # Remove useless repeat columns
-    df.drop(columns = ["year_" + col, "scorecard_name_" + col], inplace = True)
+    df.drop(columns = ["team_" + col, "year_" + col, "scorecard_name_" + col], inplace = True)
 
 # Now we can drop the score from the same year
 df = df.drop(columns = list(records_df.columns))
 
 
 
-###################
-# Wrie final data #
-###################
+####################
+# Write final data #
+####################
 
 df.to_csv("data.csv", index = False)
 
