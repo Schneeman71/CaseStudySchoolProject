@@ -30,7 +30,7 @@
 | ADM_RATE 		| Admission rate													 | float		| float		| admissions	| admission_rate.overall			|	|
 | SAT_AVG 		| Average SAT equivalent score of students admitted									 | float		| float		| admissions	| sat_scores.average.overall			|	|
 | ACTCMMID 		| Midpoint of the ACT cumulative score											 | float		| float		| admissions	| act_scores.midpoint.cumulative		|	|
-| RET_FT4 		| First-time, full-time student retention rate at four-year institutions						 | float		|		| student	| retention_rate.four_year.full_time		|	|
+| RET_FT4 		| First-time, full-time student retention rate at four-year institutions						 | float		|		| student	| retention_rate.four_year.full_time		| 7	|
 | C150_4 		| Completion rate for first-time, full-time students at four-year institutions (150% of expected time to completion)	 | float		|		| completion	| completion_rate_4yr_150nt			| 6	|
 | MD_EARN_WNE_P10 	| Median earnings of students working and not enrolled 10 years after entry						 | integer		| integer	| earnings	| 10_yrs_after_entry.median			|	|
 | TUITIONFEE_IN		| In-state tuition and fees												 | integer		| integer	| cost		| tuition.in_state				|	|
