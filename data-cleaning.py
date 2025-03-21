@@ -38,19 +38,14 @@ records_df.drop(5646, inplace = True)
 # Remove completely empty columns
 scorecard_df.drop(columns = ["LOCALE2","PRGMOFR", "MDCOST_ALL", "MDEARN_ALL"], inplace = True)
 
-# Remove Penn State data (see comment from the records section of this script)
-scorecard.drop([4500, 4681], inplace = True)
+# Use correct data types
+scorecard_df = scorecard_df.astype({"LOCALE": "int",
+                                    "CCSIZSET": "int",
+                                    "ADMCON7": "int",
+                                    "OPENADMP": "int"})
 
-# Add columns of n-years-ago
-new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago",
-               "Five_years_ago", "Six_years_ago", "Seven_years_ago", "Eight_years_ago",
-               "Nine_years_ago", "Ten_years_ago", "Eleven_year_ago", "Twelve_years_ago",
-               "Thirteen_years_ago", "Fourteen_years_ago", "Fifteen_years_ago", "Sixteen_years_ago",
-               "Seventeen_years_ago", "Eighteen_years_ago", "Nineteen_years_ago", "Twenty_years_ago"]
-# Years correspond to students in the <Year-1>-<Year> school year,
-# so we want to link it up to 2 years prior for the first year.
-for i in range(20):
-    scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
+# Remove Penn State data (see comment from the records section of this script)
+scorecard_df.drop([4500, 4681], inplace = True)
 
 # Assume LOCALE based on CITY. 
 # All the LOCALE data present is from the 2022 year, so we don't
@@ -72,6 +67,17 @@ for name in list(scorecard_df.INSTNM.unique()):
         ccsizset = 0
     scorecard_df.loc[scorecard_df.INSTNM == name, "CCSIZSET"] = locale
 
+# Add columns of n-years-ago
+new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago",
+               "Five_years_ago", "Six_years_ago", "Seven_years_ago", "Eight_years_ago",
+               "Nine_years_ago", "Ten_years_ago", "Eleven_year_ago", "Twelve_years_ago",
+               "Thirteen_years_ago", "Fourteen_years_ago", "Fifteen_years_ago", "Sixteen_years_ago",
+               "Seventeen_years_ago", "Eighteen_years_ago", "Nineteen_years_ago", "Twenty_years_ago"]
+# Years correspond to students in the <Year-1>-<Year> school year,
+# so we want to link it up to 2 years prior for the first year.
+for i in range(20):
+    scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
+
 
 
 ####################
@@ -82,14 +88,14 @@ for name in list(scorecard_df.INSTNM.unique()):
 # We'll take it out later.
 df = scorecard_df
 df = df.merge(records_df,
-              how = "left",
+              how = "inner",
               left_on = ["Year", "INSTNM"],
               right_on = ["year", "scorecard_name"])
 
 # Do the merge
 for col in new_columns:
     df = df.merge(records_df,
-                  how = "left",
+                  how = "inner",
                   left_on = [col, "INSTNM"],
                   right_on = ["year", "scorecard_name"],
                   suffixes = (None, "_" + col))
