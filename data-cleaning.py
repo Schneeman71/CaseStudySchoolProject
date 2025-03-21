@@ -13,6 +13,22 @@ scorecard_df = pd.read_csv("combined_scorecard_data.csv")
 # Make all NAs in the tied column 0
 records_df.loc[records_df.tied.isna(), "tied"] = 0 
 
+# Remove repeats (Fresno state 2022 is the only one)
+records_df.drop(5646, inplace = True)
+
+# The following colleges have no value for "scorecard_name":
+# 'Centre', 'Charlotte', 'Sewanee', 'Washington_+_Lee', 'West_Texas_A+M', 'Western_State', 'William_+_Mary'
+# The following just doesn't have a match:
+# 'The Pennsylvania State University'
+# It only exists for 2020 and 2021 in the scorecard dataframe,
+# so we'll just remove it from the scorecard dataframe.
+# they are rows 4500 and 4681 (in the scoredard dataframe)
+# Evidence:
+# scorecard_df.loc[scorecard_df.INSTNM.str.contains("Penn"), ["Year", "INSTNM"]]
+# all_names = list(record_test_in.scorecard_name.unique())
+# [row['scorecard_name'] for index, row in record_test_left.iterrows() if row['scorecard_name'] not in all_names]
+# [row['team'] for index, row in record_test_left.iterrows() if row['scorecard_name'] not in all_names]
+
 
 
 #####################################
@@ -21,6 +37,9 @@ records_df.loc[records_df.tied.isna(), "tied"] = 0
 
 # Remove completely empty columns
 scorecard_df.drop(columns = ["LOCALE2","PRGMOFR", "MDCOST_ALL", "MDEARN_ALL"], inplace = True)
+
+# Remove Penn State data (see comment from the records section of this script)
+scorecard.drop([4500, 4681], inplace = True)
 
 # Add columns of n-years-ago
 new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago",
