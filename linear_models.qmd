@@ -1,0 +1,159 @@
+---
+title: "Linear Models"
+format: html
+editor: visual
+---
+
+## Setup
+```{r}
+library(tidyverse)
+library(corrplot)
+library(car)
+
+df <- read_csv("merged_data.csv")
+```
+
+
+## Model Ideas
+
+#### What we need to analyze
+- Better football season -> Enrollment
+  - Within a team, avg test scores two years later ~ percentage of games won
+  - Within a team, avg enrollment rates two years later ~ percentage of games won
+- Better football season -> Male/female ratio
+  - Within a team, male ratio two years later ~ percentage of games won
+- Better football season -> Racial Diversity
+  - Within a team, white ratio two years later ~ percentage of games won
+  - Within a team, hispanic ratio two years later ~ percentage of games won
+  - Within a team, asian ratio two years later ~ percentage of games won
+
+
+
+
+#### Get data on teams
+
+```{r}
+# Using Alabama data
+data <- df[c(1:21),]
+
+# Using Boston College data
+data <- df[c(200:220),]
+
+# Using a Random Team's data
+set.seed(24601)
+# Find Team ID
+team_ids <- unique(df$UNITID)
+rand_int <- sample(1:112, 1)
+rand_id <- team_ids[rand_int]
+# Get Data
+data <- subset(df, UNITID == rand_id)
+print(data$team[1])
+```
+
+#### Avg SAT scores two years later ~ % games won
+```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
+
+# Find y
+y <- data$SAT_AVG
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
+```
+
+#### Avg addmission rates two years later ~ % games won
+```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
+
+# Find y
+y <- data$ADM_RATE
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
+```
+
+#### Within a team, male ratio two years later ~ percentage of games won
+```{r}
+
+```
+
+#### Within a team, white ratio two years later ~ percentage of games won
+```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
+
+# Find y
+y <- data$UGDS_WHITE
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
+```
+
+#### Within a team, hispanic ratio two years later ~ percentage of games won
+```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
+
+# Find y
+y <- data$UGDS_HISP
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
+```
+
+#### Within a team, asian ratio two years later ~ percentage of games won
+```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
+
+# Find y
+y <- data$UGDS_ASIAN
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
+```
+
+
+
+
+
+
+
+
