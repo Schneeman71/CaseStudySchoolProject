@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # Read in data
 records_df = pd.read_csv("college_football_records.csv")
@@ -17,17 +18,26 @@ records_df.loc[records_df.tied.isna(), "tied"] = 0
 records_df.drop(5646, inplace = True)
 
 # The following colleges have no value for "scorecard_name":
-# 'Centre', 'Charlotte', 'Sewanee', 'Washington_+_Lee', 'West_Texas_A+M', 'Western_State', 'William_+_Mary'
+# 'Centre', 'Charlotte', 'Sewanee', 'Washington_+_Lee', 'West_Texas_A+M', 'Western_State', 'William_+_Mary'.
 # The following just doesn't have a match:
 # 'The Pennsylvania State University'
 # It only exists for 2020 and 2021 in the scorecard dataframe,
 # so we'll just remove it from the scorecard dataframe.
-# they are rows 4500 and 4681 (in the scoredard dataframe)
+# They are rows 4500 and 4681 (in the scorecard dataframe).
 # Evidence:
 # scorecard_df.loc[scorecard_df.INSTNM.str.contains("Penn"), ["Year", "INSTNM"]]
 # all_names = list(record_test_in.scorecard_name.unique())
 # [row['scorecard_name'] for index, row in record_test_left.iterrows() if row['scorecard_name'] not in all_names]
 # [row['team'] for index, row in record_test_left.iterrows() if row['scorecard_name'] not in all_names]
+
+# Fill in missing values for wins, losses, and ties
+for col in ["won", "lost", "tied"]:
+    records_df.loc[records_df[col].isnull(), col] = 0
+
+# Use correct data types
+records_df = records_df.astype({"won": "int",
+                                "lost": "int",
+                                "tied": "int"})
 
 
 
@@ -35,14 +45,8 @@ records_df.drop(5646, inplace = True)
 # Cleaning the Scoreboard dataframe #
 #####################################
 
-# Remove completely empty columns
-scorecard_df.drop(columns = ["LOCALE2","PRGMOFR", "MDCOST_ALL", "MDEARN_ALL"], inplace = True)
-
-# Use correct data types
-scorecard_df = scorecard_df.astype({"LOCALE": "int",
-                                    "CCSIZSET": "int",
-                                    "ADMCON7": "int",
-                                    "OPENADMP": "int"})
+# Remove completely or very empty columns
+scorecard_df.drop(columns = ["LOCALE2","PRGMOFR", "MDCOST_ALL", "MDEARN_ALL", "MD_EARN_WNE_P10"], inplace = True)
 
 # Remove Penn State data (see comment from the records section of this script)
 scorecard_df.drop([4500, 4681], inplace = True)
@@ -59,13 +63,74 @@ for city in list(scorecard_df.CITY.unique()):
 
 # Assume CCSIZSET based on INSTNM.
 # All the CCSIZSET data present is from the 2022 year, so we don't
-# have to to worry about changes year-to-year
+# have to worry about changes year-to-year
 for name in list(scorecard_df.INSTNM.unique()):
     try:
         ccsizset = int(scorecard_df.loc[(scorecard_df.INSTNM == name) & (scorecard_df.Year == 2022), "CCSIZSET"].values[0])
     except:
         ccsizset = 0
-    scorecard_df.loc[scorecard_df.INSTNM == name, "CCSIZSET"] = locale
+    finally:
+        scorecard_df.loc[scorecard_df.INSTNM == name, "CCSIZSET"] = locale
+
+# Fill in OPENADMP for the first couple of years.
+# We'll just assume it is the same as the most
+# recent year.
+for name in list(scorecard_df.loc[scorecard_df.OPENADMP.isnull(), "INSTNM"].unique()):
+    try:
+        openadmp = int(scorecard_df.loc[(~scorecard_df.OPENADMP.isnull()) & (scorecard_df.INSTNM == name), "OPENADMP"].iloc[0])
+    except:
+        continue
+    scorecard_df.loc[(scorecard_df.OPENADMP.isnull()) & (scorecard_df.INSTNM == name), "OPENADMP"] = openadmp
+
+# Same thing as OPENADMP but with ADMCON7,
+# except if the school has open admissions,
+# we know it doesn't have requirements.
+for name in list(scorecard_df.loc[scorecard_df.ADMCON7.isnull(), "INSTNM"].unique()):
+    try:
+        admcon = int(scorecard_df.loc[(~scorecard_df.ADMCON7.isnull()) & (scorecard_df.INSTNM == name), "ADMCON7"].iloc[0])
+    except:
+        if int(scorecard_df.loc[(~scorecard_df.ADMCON7.isnull()) & (scorecard_df.INSTNM == name), "OPENADMP"].iloc[0]) == 1:
+            admcon = 3
+        else:
+            admcon = 4
+    scorecard_df.loc[(scorecard_df.ADMCON7.isnull()) & (scorecard_df.INSTNM == name), "ADMCON7"] = admcon
+
+# Fill in missing numeric values with the school's median
+missing_threshold = 0.5
+cols_of_interest = ['UGDS', 'NUMBRANCH', 'PCTPELL', 'AVGFACSAL', 'PFTFAC',
+                    'BOOKSUPPLY', 'ROOMBOARD_ON', 'ROOMBOARD_OFF',
+                    'OTHEREXPENSE_ON', 'OTHEREXPENSE_OFF', 'UGDS_WOMEN',
+                    'UGDS_MEN', 'SAT_AVG', 'ACTCMMID', 'RET_FT4', 'C150_4',
+                    'TUITIONFEE_IN', 'TUITIONFEE_OUT', 'UGDS_WHITE',
+                    'UGDS_BLACK', 'UGDS_HISP', 'UGDS_ASIAN']
+for unitid in list(scorecard_df.UNITID.unique()):
+    # Replace 0.000 with NaN
+    tmp_df = scorecard_df.loc[scorecard_df.UNITID == unitid, ].replace(0.000, np.nan)
+
+    # Check if any numerical column has excessive missing values
+    cols_with_excessive_missing = [col for col in cols_of_interest if tmp_df[col].isnull().mean() > missing_threshold]
+
+    if cols_with_excessive_missing:
+        # Skip imputation and drop rows with NaN values
+        to_drop = [index for index, row in tmp_df.iterrows() if row.isnull().sum() > 0]
+        scorecard_df.drop(to_drop, inplace = True)
+        continue
+    
+    # Now we try to impute
+    try:
+        tmp_df.loc[:, cols_of_interest] = tmp_df.loc[:, cols_of_interest].fillna(tmp_df.loc[:, cols_of_interest].median())
+        scorecard_df.loc[scorecard_df.UNITID == unitid, :] = tmp_df
+    except:
+        # Something went wrong, let's move on and drop NaN values
+        to_drop = [index for index, row in tmp_df.iterrows() if row.isnull().sum() > 0]
+        scorecard_df = scorecard_df.drop(to_drop, inplace = True)
+        continue
+
+# Use correct data types
+scorecard_df = scorecard_df.astype({"LOCALE": "int",
+                                    "CCSIZSET": "int",
+                                    "ADMCON7": "int",
+                                    "OPENADMP": "int"})
 
 # Add columns of n-years-ago
 new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago",
@@ -88,22 +153,55 @@ for i in range(20):
 # We'll take it out later.
 df = scorecard_df
 df = df.merge(records_df,
-              how = "inner",
+              how = "left",
               left_on = ["Year", "INSTNM"],
               right_on = ["year", "scorecard_name"])
 
 # Do the merge
 for col in new_columns:
     df = df.merge(records_df,
-                  how = "inner",
+                  how = "left",
                   left_on = [col, "INSTNM"],
                   right_on = ["year", "scorecard_name"],
                   suffixes = (None, "_" + col))
     # Remove useless repeat columns
-    df.drop(columns = ["team_" + col, "year_" + col, "scorecard_name_" + col], inplace = True)
+    df.drop(columns = ["team_" + col, "year_" + col, "scorecard_name_" + col, "notes_" + col], inplace = True)
 
 # Now we can drop the score from the same year
 df = df.drop(columns = list(records_df.columns))
+
+# And the # of years back columns
+df = df.drop(columns = new_columns)
+
+# Again ensure the correct types are used
+# integer_cols = [0, 4, 6, 7, 8, 9, 10, 11, 20, 34, 35, 36, 37,
+#                 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+#                 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+#                 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+#                 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
+#                 86, 87, 88, 89, 90, 91, 92, 93, 94,]
+integer_cols = ['UNITID', 'Year', 'MAIN', 'NUMBRANCH', 'HIGHDEG', 'REGION', 'LOCALE', 'CCSIZSET', 'ADMCON7',
+                'OPENADMP', 'won_One_year_ago', 'lost_One_year_ago', 'tied_One_year_ago', 'won_Two_years_ago',
+                'lost_Two_years_ago', 'tied_Two_years_ago', 'won_Three_years_ago', 'lost_Three_years_ago',
+                'tied_Three_years_ago', 'won_Four_years_ago', 'lost_Four_years_ago', 'tied_Four_years_ago',
+                'won_Five_years_ago', 'lost_Five_years_ago', 'tied_Five_years_ago', 'won_Six_years_ago',
+                'lost_Six_years_ago', 'tied_Six_years_ago', 'won_Seven_years_ago', 'lost_Seven_years_ago',
+                'tied_Seven_years_ago', 'won_Eight_years_ago', 'lost_Eight_years_ago', 'tied_Eight_years_ago',
+                'won_Nine_years_ago', 'lost_Nine_years_ago', 'tied_Nine_years_ago', 'won_Ten_years_ago',
+                'lost_Ten_years_ago', 'tied_Ten_years_ago', 'won_Eleven_year_ago', 'lost_Eleven_year_ago',
+                'tied_Eleven_year_ago', 'won_Twelve_years_ago', 'lost_Twelve_years_ago', 'tied_Twelve_years_ago',
+                'won_Thirteen_years_ago', 'lost_Thirteen_years_ago', 'tied_Thirteen_years_ago',
+                'won_Fourteen_years_ago', 'lost_Fourteen_years_ago', 'tied_Fourteen_years_ago',
+                'won_Fifteen_years_ago', 'lost_Fifteen_years_ago', 'tied_Fifteen_years_ago',
+                'won_Sixteen_years_ago', 'lost_Sixteen_years_ago', 'tied_Sixteen_years_ago',
+                'won_Seventeen_years_ago', 'lost_Seventeen_years_ago', 'tied_Seventeen_years_ago',
+                'won_Eighteen_years_ago', 'lost_Eighteen_years_ago', 'tied_Eighteen_years_ago',
+                'won_Nineteen_years_ago', 'lost_Nineteen_years_ago', 'tied_Nineteen_years_ago',
+                'won_Twenty_years_ago', 'lost_Twenty_years_ago', 'tied_Twenty_years_ago']
+# df.loc[:, integer_cols] = df.loc[:, integer_cols].astype("Int64")
+for col in integer_cols:
+    df[col] = df[col].astype("Int64")
+
 
 
 
