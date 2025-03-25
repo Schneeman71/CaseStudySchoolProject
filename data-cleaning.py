@@ -34,10 +34,14 @@ records_df.drop(5646, inplace = True)
 for col in ["won", "lost", "tied"]:
     records_df.loc[records_df[col].isnull(), col] = 0
 
+# Create a total games column
+records_df["games"] = records_df["won"] + records_df["lost"] + records_df["tied"]
+
 # Use correct data types
 records_df = records_df.astype({"won": "int",
                                 "lost": "int",
-                                "tied": "int"})
+                                "tied": "int",
+                                "games": "int"})
 
 
 
