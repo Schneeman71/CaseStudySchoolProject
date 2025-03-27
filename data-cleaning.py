@@ -50,7 +50,7 @@ records_df = records_df.astype({"won": "int",
 #####################################
 
 # Remove completely or very empty columns
-scorecard_df.drop(columns = ["LOCALE2","PRGMOFR", "MDCOST_ALL", "MDEARN_ALL", "MD_EARN_WNE_P10"], inplace = True)
+scorecard_df.drop(columns = ["LOCALE2", "PRGMOFR", "MDCOST_ALL", "MDEARN_ALL", "MD_EARN_WNE_P10"], inplace = True)
 
 # Remove Penn State data (see comment from the records section of this script)
 scorecard_df.drop([4500, 4681], inplace = True)
@@ -130,6 +130,22 @@ for unitid in list(scorecard_df.UNITID.unique()):
         scorecard_df = scorecard_df.drop(to_drop, inplace = True)
         continue
 
+# Create delta columns that take the difference between
+# the present year and the previous year.
+delta_columns = ["INSTNM", "Year", "UGDS", "UGDS_WOMEN", "UGDS_MEN", "ADM_RATE",
+                 "SAT_AVG", "ACTCMMID", "RET_FT4", "C150_4", "TUITIONFEE_IN",
+                 "TUITIONFEE_OUT", "UGDS_WHITE", "UGDS_BLACK", "UGDS_HISP",
+                 "UGDS_ASIAN"]
+year_before = scorecard_df.loc[:, delta_columns]
+year_before.loc[:, "Year"] = year_before.loc[:, "Year"] + 1
+scorecard_df = scorecard_df.merge(year_before,
+                                  how = "left",
+                                  left_on = ["Year", "INSTNM"],
+                                  right_on = ["Year", "INSTNM"],
+                                  suffixes = (None, "_delta"))
+for col in delta_columns[1:]:
+    scorecard_df.loc[:, col + "_delta"] = scorecard_df[col] - scorecard_df[col + "_delta"]
+
 # Use correct data types
 scorecard_df = scorecard_df.astype({"LOCALE": "int",
                                     "CCSIZSET": "int",
@@ -183,7 +199,7 @@ df = df.drop(columns = new_columns)
 #                 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
 #                 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
 #                 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
-#                 86, 87, 88, 89, 90, 91, 92, 93, 94,]
+#                 86, 87, 88, 89, 90, 91, 92, 93, 94]
 integer_cols = ['UNITID', 'Year', 'MAIN', 'NUMBRANCH', 'HIGHDEG', 'REGION', 'LOCALE', 'CCSIZSET', 'ADMCON7',
                 'OPENADMP', 'won_One_year_ago', 'lost_One_year_ago', 'tied_One_year_ago', 'games_One_year_ago',
                 'won_Two_years_ago', 'lost_Two_years_ago', 'tied_Two_years_ago', 'games_Two_years_ago',
