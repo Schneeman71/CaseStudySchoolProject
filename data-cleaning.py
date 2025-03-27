@@ -143,8 +143,8 @@ scorecard_df = scorecard_df.merge(year_before,
                                   left_on = ["Year", "INSTNM"],
                                   right_on = ["Year", "INSTNM"],
                                   suffixes = (None, "_delta"))
-for col in delta_columns[1:]:
-    scorecard_df.loc[:, col + "_delta"] = scorecard_df[col] - scorecard_df[col + "_delta"]
+for col in delta_columns[2:]:
+    scorecard_df.loc[:, col + "_delta"] = (scorecard_df[col] / scorecard_df[col + "_delta"]) - 1
 
 # Use correct data types
 scorecard_df = scorecard_df.astype({"LOCALE": "int",
