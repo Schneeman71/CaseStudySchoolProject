@@ -31,7 +31,6 @@ df <- read_csv("merged_data.csv")
 
 
 #### Get data on teams
-
 ```{r}
 # Using Alabama data
 data <- df[c(1:21),]
@@ -152,6 +151,44 @@ plot(x, y)
 
 
 
+
+
+
+## Okay, now let's do the same thing but in for loops :)
+
+#### Avg SAT scores two years later ~ % games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:83) {
+  data <- subset(df_new, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$SAT_AVG
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+for (i in 85:112) {
+  data <- subset(df_new, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$SAT_AVG
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
 
 
 
