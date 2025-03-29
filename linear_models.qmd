@@ -89,7 +89,21 @@ plot(x, y)
 
 #### Within a team, male ratio two years later ~ percentage of games won
 ```{r}
+# Find x
+x <- data$won / (data$won + data$lost)
+x <- x[1:(length(x)-2)]
 
+# Find y
+y <- data$UGDS_MEN
+y <- y[3:length(y)]
+
+mod <- lm(y ~ x)
+
+# Assumptions
+plot(mod)
+
+summary(mod)
+plot(x, y)
 ```
 
 #### Within a team, white ratio two years later ~ percentage of games won
@@ -160,21 +174,8 @@ plot(x, y)
 ```{r}
 p_values <- numeric(0)
 
-for (i in 1:83) {
-  data <- subset(df_new, UNITID == team_ids[i])
-  
-  # Find x and y
-  x <- data$won / (data$won + data$lost)
-  x <- x[1:(length(x)-2)]
-  y <- data$SAT_AVG
-  y <- y[3:length(y)]
-  
-  mod <- lm(y ~ x)
-  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
-  p_values <- c(p_values, pv)
-}
-for (i in 85:112) {
-  data <- subset(df_new, UNITID == team_ids[i])
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
   
   # Find x and y
   x <- data$won / (data$won + data$lost)
@@ -189,6 +190,115 @@ for (i in 85:112) {
 
 mean(p_values)
 ```
+
+#### Avg addmission rates two years later ~ % games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$ADM_RATE
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
+
+#### Within a team, male ratio two years later ~ percentage of games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$UGDS_MEN
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
+
+#### Within a team, white ratio two years later ~ percentage of games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$UGDS_WHITE
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
+
+#### Within a team, hispanic ratio two years later ~ percentage of games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$UGDS_HISP
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
+
+#### Within a team, asian ratio two years later ~ percentage of games won
+```{r}
+p_values <- numeric(0)
+
+for (i in 1:111) {
+  data <- subset(df, UNITID == team_ids[i])
+  
+  # Find x and y
+  x <- data$won / (data$won + data$lost)
+  x <- x[1:(length(x)-2)]
+  y <- data$UGDS_ASIAN
+  y <- y[3:length(y)]
+  
+  mod <- lm(y ~ x)
+  pv <- summary(mod)$coefficients["x", "Pr(>|t|)"]
+  p_values <- c(p_values, pv)
+}
+
+mean(p_values)
+```
+
+
+
+
 
 
 
