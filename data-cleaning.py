@@ -117,7 +117,7 @@ for unitid in list(scorecard_df.UNITID.unique()):
     if cols_with_excessive_missing:
         # Skip imputation and drop rows with NaN values
         to_drop = [index for index, row in tmp_df.iterrows() if row.isnull().sum() > 0]
-        scorecard_df.drop(to_drop, inplace = True)
+        #scorecard_df.drop(to_drop, inplace = True)
         continue
     
     # Now we try to impute
@@ -153,14 +153,10 @@ scorecard_df = scorecard_df.astype({"LOCALE": "int",
                                     "OPENADMP": "int"})
 
 # Add columns of n-years-ago
-new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago",
-               "Five_years_ago", "Six_years_ago", "Seven_years_ago", "Eight_years_ago",
-               "Nine_years_ago", "Ten_years_ago", "Eleven_year_ago", "Twelve_years_ago",
-               "Thirteen_years_ago", "Fourteen_years_ago", "Fifteen_years_ago", "Sixteen_years_ago",
-               "Seventeen_years_ago", "Eighteen_years_ago", "Nineteen_years_ago", "Twenty_years_ago"]
+new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_ago", "Five_years_ago"]
 # Years correspond to students in the <Year-1>-<Year> school year,
 # so we want to link it up to 2 years prior for the first year.
-for i in range(20):
+for i in range(5):
     scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
 
 
@@ -205,25 +201,7 @@ integer_cols = ['UNITID', 'Year', 'MAIN', 'NUMBRANCH', 'HIGHDEG', 'REGION', 'LOC
                 'won_Two_years_ago', 'lost_Two_years_ago', 'tied_Two_years_ago', 'games_Two_years_ago',
                 'won_Three_years_ago', 'lost_Three_years_ago' , 'tied_Three_years_ago', 'games_Three_years_ago',
                 'won_Four_years_ago', 'lost_Four_years_ago', 'tied_Four_years_ago', 'games_Four_years_ago',
-                'won_Five_years_ago', 'lost_Five_years_ago', 'tied_Five_years_ago', 'games_Five_years_ago',
-                'won_Six_years_ago', 'lost_Six_years_ago', 'tied_Six_years_ago', 'games_Six_years_ago',
-                'won_Seven_years_ago', 'lost_Seven_years_ago', 'tied_Seven_years_ago', 'games_Seven_years_ago',
-                'won_Eight_years_ago', 'lost_Eight_years_ago', 'tied_Eight_years_ago', 'games_Eight_years_ago',
-                'won_Nine_years_ago', 'lost_Nine_years_ago', 'tied_Nine_years_ago', 'games_Nine_years_ago',
-                'won_Ten_years_ago', 'lost_Ten_years_ago', 'tied_Ten_years_ago', 'games_Ten_years_ago',
-                'won_Eleven_year_ago', 'lost_Eleven_year_ago', 'tied_Eleven_year_ago', 'games_Eleven_year_ago',
-                'won_Twelve_years_ago', 'lost_Twelve_years_ago', 'tied_Twelve_years_ago', 'games_Twelve_years_ago',
-                'won_Thirteen_years_ago', 'lost_Thirteen_years_ago', 'tied_Thirteen_years_ago',
-                'games_Thirteen_years_ago', 'won_Fourteen_years_ago', 'lost_Fourteen_years_ago',
-                'tied_Fourteen_years_ago', 'games_Fourteen_years_ago', 'won_Fifteen_years_ago',
-                'lost_Fifteen_years_ago', 'tied_Fifteen_years_ago', 'games_Fifteen_years_ago',
-                'won_Sixteen_years_ago', 'lost_Sixteen_years_ago', 'tied_Sixteen_years_ago',
-                'games_Sixteen_years_ago', 'won_Seventeen_years_ago', 'lost_Seventeen_years_ago',
-                'tied_Seventeen_years_ago', 'games_Seventeen_years_ago', 'won_Eighteen_years_ago',
-                'lost_Eighteen_years_ago', 'tied_Eighteen_years_ago', 'games_Eighteen_years_ago',
-                'won_Nineteen_years_ago', 'lost_Nineteen_years_ago', 'tied_Nineteen_years_ago',
-                'games_Nineteen_years_ago', 'won_Twenty_years_ago', 'lost_Twenty_years_ago',
-                'tied_Twenty_years_ago', 'games_Twenty_years_ago']
+                'won_Five_years_ago', 'lost_Five_years_ago', 'tied_Five_years_ago', 'games_Five_years_ago']
 # df.loc[:, integer_cols] = df.loc[:, integer_cols].astype("Int64")
 for col in integer_cols:
     df[col] = df[col].astype("Int64")

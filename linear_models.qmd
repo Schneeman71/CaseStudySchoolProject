@@ -299,8 +299,415 @@ mean(p_values)
 
 
 
+# Change versus previous year
 
+```{r}
+df2 <- read_csv("data.csv") %>%
+  select(!c(UNITID)) %>%
+  filter(if_all(everything(), ~ !is.na(.x))) %>%
+  mutate(across(c(Year,
+                  OPEID,
+                  CITY,
+                  MAIN,
+                  HIGHDEG,
+                  REGION,
+                  LOCALE,
+                  CCSIZSET,
+                  OPENADMP,
+                  ADMCON7), ~factor(.x)))
+```
 
+Using this dataset,
+I calculated the change in all our reponse variables versus where they were in the previous year.
+The columns have the same name with an additional "\_delta"
+and it shows the percent change from the previous year.
+This means if a coefficient is 0.02,
+the value goes up by 2% with an increase in that variable.
+Here is a comparison of that approach for ADM_RATE versus just predicting the value itself.
 
+Here's a function that cleans the data, creates a model, and performs variable selection.
 
+```{r}
+create_model <- function(data, response, keep = c(), delta = FALSE) {
+  responses <- c("UGDS_delta",
+                 "UGDS_WOMEN_delta",
+                 "UGDS_MEN_delta",
+                 "ADM_RATE_delta",
+                 "SAT_AVG_delta",
+                 "ACTCMMID_delta",
+                 "RET_FT4_delta",
+                 "C150_4_delta",
+                 "TUITIONFEE_IN_delta",
+                 "TUITIONFEE_OUT_delta",
+                 "UGDS_WHITE_delta",
+                 "UGDS_BLACK_delta",
+                 "UGDS_HISP_delta",
+                 "UGDS_ASIAN_delta",
+                 "UGDS",
+                 "UGDS_WOMEN",
+                 "UGDS_MEN",
+                 "ADM_RATE",
+                 "SAT_AVG",
+                 "ACTCMMID",
+                 "RET_FT4",
+                 "C150_4",
+                 "TUITIONFEE_IN",
+                 "TUITIONFEE_OUT",
+                 "UGDS_WHITE",
+                 "UGDS_BLACK",
+                 "UGDS_HISP",
+                 "UGDS_ASIAN")
+  if (delta) {
+    response <- paste(response, "_delta", sep = "")
+  }
 
+  if (!(response %in% responses)) {
+    cat("Response not valid.")
+  }
+
+  not_include <- responses[!c(responses %in% keep)] |>
+    grep(paste("^", response, "$", sep = ""),
+         x = _,
+         value = TRUE,
+         invert = TRUE)
+
+  tmp_df <- data |>
+    select(!matches("(games|tied)")) |>
+    select(!any_of(not_include)) |>
+    select(!c("CITY",
+              "INSTNM",
+              "REGION",
+              "OPEID",
+              "MAIN",
+              "CCSIZSET",
+              "OPENADMP")) |>
+    filter(if_all(everything(), ~ !is.na(.x))) |>
+    filter(if_all(everything(), ~ !is.nan(.x))) |>
+    filter(if_all(everything(), ~ !is.infinite(.x))) |>
+    filter(!is.na(response))
+
+  full_model <- paste(response,
+                      " ~ . + ",
+                      "won_One_year_ago * ",
+                      "won_Two_years_ago * ",
+                      "won_Three_years_ago * ",
+                      "won_Four_years_ago * ",
+                      "won_Five_years_ago + ",
+                      "lost_One_year_ago * ",
+                      "lost_Two_years_ago * ",
+                      "lost_Three_years_ago * ",
+                      "lost_Four_years_ago * ",
+                      "lost_Five_years_ago",
+                      sep = "") |>
+    lm(data = tmp_df)
+  base_model <- paste(response,
+                      "~ 1") |>
+    lm(data = tmp_df)
+
+  step(full_model,
+       direction = "backward",
+       scope = list(upper = full_model, lower = base_model),
+       trace = 0)
+}
+```
+
+```{r}
+normal_model <- create_model(df2, "UGDS", c("UGDS_WOMEN",
+                                            "UGDS_MEN",
+                                            "ADM_RATE",
+                                            "SAT_AVG",
+                                            "ACTCMMID",
+                                            "TUITIONFEE_IN",
+                                            "TUITIONFEE_OUT",
+                                            "UGDS_WHITE",
+                                            "UGDS_BLACK",
+                                            "UGDS_HISP",
+                                            "UGDS_ASIAN"))
+delta_model <- create_model(df2, "UGDS", c("UGDS_WOMEN",
+                                           "UGDS_MEN",
+                                            "ADM_RATE",
+                                           "SAT_AVG",
+                                           "ACTCMMID",
+                                           "TUITIONFEE_IN",
+                                           "TUITIONFEE_OUT",
+                                           "UGDS_WHITE",
+                                           "UGDS_BLACK",
+                                           "UGDS_HISP",
+                                           "UGDS_ASIAN"),
+                            delta = TRUE)
+summary(normal_model)
+summary(delta_model)
+```
+
+Now,
+the model directly predicting the value does predict `r 100*summary(normal_model)$adj.r.squared`
+while the year-over-year change model only predicts `r 100*summary(normal_model)$adj.r.squared`.
+This difference makes sense 
+because this other model takes out the variance that might come from differences in schools
+and only looks the difference from the previous year.
+This also has the additional benefit of putting every school on the same scale of percentages.
+This example also explains a particularly low amount of the data;
+future models do better at explaining the variation.
+
+A further note,
+I'll continue using the year-over-year change in the response variable,
+but results of models using the original response are similarly proportional to that example.
+
+Here are models that break down the data further:
+
+## Demographics
+
+```{r, echo=FALSE}
+women <- create_model(df2, "UGDS_WOMEN", c("UGDS",
+                                           "ADM_RATE",
+                                           "SAT_AVG",
+                                           "ACTCMMID",
+                                           "TUITIONFEE_IN",
+                                           "TUITIONFEE_OUT",
+                                           "UGDS_WHITE",
+                                           "UGDS_BLACK",
+                                           "UGDS_HISP",
+                                           "UGDS_ASIAN"),
+                      delta = TRUE)
+summary(women)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_WOMEN:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+men <- create_model(df2, "UGDS_MEN", c("UGDS",
+                                       "ADM_RATE",
+                                       "SAT_AVG",
+                                       "ACTCMMID",
+                                       "TUITIONFEE_IN",
+                                       "TUITIONFEE_OUT",
+                                       "UGDS_WHITE",
+                                       "UGDS_BLACK",
+                                       "UGDS_HISP",
+                                       "UGDS_ASIAN"),
+                    delta = TRUE)
+summary(men)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_MEN:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+white <- create_model(df2, "UGDS_WHITE", c("UGDS",
+                                           "UGDS_WOMEN",
+                                           "UGDS_MEN",
+                                           "ADM_RATE",
+                                           "SAT_AVG",
+                                           "ACTCMMID",
+                                           "TUITIONFEE_IN",
+                                           "TUITIONFEE_OUT"),
+                      delta = TRUE)
+summary(white)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_WHITE:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+black <- create_model(df2, "UGDS_BLACK", c("UGDS",
+                                           "UGDS_WOMEN",
+                                           "UGDS_MEN",
+                                           "ADM_RATE",
+                                           "SAT_AVG",
+                                           "ACTCMMID",
+                                           "TUITIONFEE_IN",
+                                           "TUITIONFEE_OUT"),
+                      delta = TRUE)
+summary(black)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_BLACK:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+hispanic <- create_model(df2, "UGDS_HISP", c("UGDS",
+                                             "UGDS_WOMEN",
+                                             "UGDS_MEN",
+                                             "ADM_RATE",
+                                             "SAT_AVG",
+                                             "ACTCMMID",
+                                             "TUITIONFEE_IN",
+                                             "TUITIONFEE_OUT"),
+                         delta = TRUE)
+summary(hispanic)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_HISP:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+asian <- create_model(df2, "UGDS_ASIAN", c("UGDS",
+                                           "UGDS_WOMEN",
+                                           "UGDS_MEN",
+                                           "ADM_RATE",
+                                           "SAT_AVG",
+                                           "ACTCMMID",
+                                           "TUITIONFEE_IN",
+                                           "TUITIONFEE_OUT"),
+                      delta = TRUE)
+summary(asian)$adj.r.squared %>%
+  paste("Adjusted R-squared for UGDS_ASIAN:", ., "\n") %>%
+  cat()
+```
+
+Like we discussed in our meeting,
+the model that predicts the best among race demographics is for white people.
+However, the gender models changed which performed better from men to women.
+This does not necessarily mean that a good football record leads to more admissions from these groups,
+instead, it simply means they do a better job at modeling what is happening in our data.
+
+Another difference of what we talked about in our meeting
+is that now many of the football records columns are now significant.
+They aren't significant across the board,
+but I think it is reasonable to say they mean something.
+There are some important things to note about this.
+This is done using interactions which attempt to replicate the team's reputation over the last five years.
+For example, if a won lots of games this year and not other years,
+effects are much different than they would be if they won lots of games over the past five years.
+
+Interpreting that might be somewhat difficult,
+but examples can help.
+We could even take a school and show the difference if they won one more game (and lost one more).
+Again, even if these values are statistically significant,
+it doesn't mean that better football records lead to more or less of these demographics,
+nor does it mean that it is wise to spend more money on football.
+It simply means they have an impact whether big or small.
+
+You can rerun this code chunk to see some examples of the effects:
+```{r, echo=FALSE}
+r <- sample(seq_len(nrow(df2)), 1)
+example <- df2[r, ]
+
+models <- c("women", "men", "white", "black", "hispanic", "asian")
+
+paste(example$INSTNM, ", ", example$Year, ":\n", sep = "") %>%
+  cat()
+cat("Predictor\tOne Last Year\tAll Five Years\n")
+for (model in models) {
+  m <- get(model)
+  s <- summary(m)
+
+  current <- example %>%
+    predict(m, newdata = .)
+
+  one_better <- example %>%
+    mutate(won_One_year_ago = won_One_year_ago + 1,
+     lost_One_year_ago = lost_One_year_ago - 1) %>%
+    predict(m, newdata = .)
+
+  five_better <- example %>%
+    mutate(across(starts_with("won"), ~ .x + 1),
+     across(starts_with("lost"), ~ .x - 1)) %>%
+    predict(m, newdata = .)
+
+  paste(all.vars(s$call$formula)[1],
+        one_better - current,
+        five_better - current,
+	"\n",
+        sep = "\t") %>%
+    cat()
+}
+```
+
+## Student Success
+
+```{r, echo=FALSE}
+adm_rate <- create_model(df2, "ADM_RATE", c("UGDS",
+                                            "UGDS_WOMEN",
+                                            "UGDS_MEN",
+                                            "SAT_AVG",
+                                            "ACTCMMID",
+                                            "TUITIONFEE_IN",
+                                            "TUITIONFEE_OUT",
+                                            "UGDS_WHITE",
+                                            "UGDS_BLACK",
+                                            "UGDS_HISP",
+                                            "UGDS_ASIAN"),
+                         delta = TRUE)
+summary(adm_rate)$adj.r.squared %>%
+  paste("Adjusted R-squared for ADM_RATE:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+sat_avg <- create_model(df2, "SAT_AVG", c("UGDS",
+                                          "UGDS_WOMEN",
+                                          "UGDS_MEN",
+                                          "ADM_RATE",
+                                          "TUITIONFEE_IN",
+                                          "TUITIONFEE_OUT",
+                                          "UGDS_WHITE",
+                                          "UGDS_BLACK",
+                                          "UGDS_HISP",
+                                          "UGDS_ASIAN"),
+                        delta = TRUE)
+summary(sat_avg)$adj.r.squared %>%
+  paste("Adjusted R-squared for SAT_AVG:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+act <- create_model(df2, "ACTCMMID", c("UGDS",
+                                       "UGDS_WOMEN",
+                                       "UGDS_MEN",
+                                       "ADM_RATE",
+                                       "TUITIONFEE_IN",
+                                       "TUITIONFEE_OUT",
+                                       "UGDS_WHITE",
+                                       "UGDS_BLACK",
+                                       "UGDS_HISP",
+                                       "UGDS_ASIAN"),
+                    delta = TRUE)
+summary(act)$adj.r.squared %>%
+  paste("Adjusted R-squared for ACTCMMID:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+ret <- create_model(df2, "RET_FT4", c("UGDS",
+                                      "UGDS_WOMEN",
+                                      "UGDS_MEN",
+                                      "ADM_RATE",
+                                      "SAT_AVG",
+                                      "ACTCMMID",
+                                      "TUITIONFEE_IN",
+                                      "TUITIONFEE_OUT",
+                                      "UGDS_WHITE",
+                                      "UGDS_BLACK",
+                                      "UGDS_HISP",
+                                      "UGDS_ASIAN"),
+                    delta = TRUE)
+summary(ret)$adj.r.squared %>%
+  paste("Adjusted R-squared for RET_FT4:", ., "\n") %>%
+  cat()
+```
+
+```{r, echo=FALSE}
+c_one_fifty <- create_model(df2, "C150_4", c("UGDS",
+                                             "UGDS_WOMEN",
+                                             "UGDS_MEN",
+                                             "ADM_RATE",
+                                             "SAT_AVG",
+                                             "ACTCMMID",
+                                             "TUITIONFEE_IN",
+                                             "TUITIONFEE_OUT",
+                                             "UGDS_WHITE",
+                                             "UGDS_BLACK",
+                                             "UGDS_HISP",
+                                             "UGDS_ASIAN"),
+                            delta = TRUE)
+summary(c_one_fifty)$adj.r.squared %>%
+  paste("Adjusted R-squared for C150_4:", ., "\n") %>%
+  cat()
+```
+
+These models mostly perform very poorly,
+so they probably aren't that useful.
+Average SAT scores are actually decent,
+however.
+That model also has some significant predictor variables among football records,
+but it is much fewer and many are even removed in variable selection.
+
+```{r}
+```
