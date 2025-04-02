@@ -1,0 +1,420 @@
+---
+title: "JamesEDA"
+format: html
+editor: visual
+---
+
+**Imports**
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(glmnet)
+```
+
+**Quick EDA**
+
+```{r}
+# Alabama spent 12 million in 2023 (which if not for donations would be a defecit)
+
+df <- read_csv("merged_data.csv")
+```
+
+```{r}
+# Calculate a win percentage column
+df$win_pct <- df$won / (df$won + df$lost + df$tied)
+```
+
+```{r}
+df_subset <- df %>%
+  select(win_pct, ADM_RATE, SAT_AVG, ACTCMMID)
+
+cor_matrix <- cor(df_subset, use = "complete.obs")
+print(cor_matrix)
+```
+
+```{r}
+ggplot(df, aes(x = win_pct, y = SAT_AVG)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Win % vs SAT Average", x = "Win %", y = "SAT Average")
+
+ggplot(df, aes(x = win_pct, y = ACTCMMID)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Win % vs ACT Midpoint", x = "Win %", y = "ACT Midpoint")
+
+ggplot(df, aes(x = win_pct, y = ADM_RATE)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Win % vs Admission Rate", x = "Win %", y = "Admission Rate")
+
+```
+
+```{r}
+summary(lm(SAT_AVG ~ win_pct, data = df))
+summary(lm(ACTCMMID ~ win_pct, data = df))
+summary(lm(ADM_RATE ~ win_pct, data = df))
+
+```
+
+```{r}
+model <- lm(SAT_AVG ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + PFTFAC + 
+              UGDS_BLACK + UGDS_HISP + UGDS_ASIAN + factor(year), data = df)
+#ACTCMMID
+#SAT_AVG
+summary(model)
+```
+
+```{r}
+model <- lm(UGDS_MEN ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + 
+              PFTFAC + UGDS_BLACK + UGDS_HISP + UGDS_ASIAN + 
+              factor(year), data = df)
+
+summary(model)
+```
+
+```{r}
+# Retention (2 year)
+model_ret <- lm(RET_FT4 ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + 
+                  PFTFAC + 
+                  factor(year), data = df)
+
+summary(model_ret)
+
+```
+
+```{r}
+# Graduation rate
+model_grad <- lm(C150_4 ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + 
+                   PFTFAC + UGDS_BLACK + UGDS_HISP + UGDS_ASIAN + 
+                   factor(year), data = df)
+
+summary(model_grad)
+
+```
+
+```{r}
+# Step 0: Drop rows with missing values in any relevant variable
+df_complete <- na.omit(df[, c("C150_4", "win_pct", "UGDS", "TUITIONFEE_IN", "AVGFACSAL", 
+                              "PFTFAC", "UGDS_BLACK", "UGDS_HISP", "UGDS_ASIAN", "year")])
+
+# Step 1: Create model matrix
+X <- model.matrix(C150_4 ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + 
+                    PFTFAC + UGDS_BLACK + UGDS_HISP + UGDS_ASIAN + 
+                    factor(year), data = df_complete)[, -1]
+
+# Step 2: Define outcome variable
+y <- df_complete$C150_4
+
+# Step 3: Identify which columns are year dummies
+year_cols <- grepl("factor\\(year\\)", colnames(X))
+
+# Step 4: Set penalty factor
+penalty <- ifelse(year_cols, 0, 1)
+
+# Step 5: Run cross-validated LASSO
+library(glmnet)
+cv_model <- cv.glmnet(X, y, alpha = 1, penalty.factor = penalty, standardize = TRUE)
+
+# Step 6: Fit final model
+lasso_model <- glmnet(X, y, alpha = 1, lambda = cv_model$lambda.min, penalty.factor = penalty)
+
+# Step 7: Show coefficients
+coef(lasso_model)
+
+```
+
+```{r}
+model <- lm(UGDS_BLACK ~ win_pct + TUITIONFEE_IN + factor(year), data = df)
+summary(model)
+```
+
+```{r}
+model_grad <- lm(C150_4 ~ win_pct + UGDS + TUITIONFEE_IN + AVGFACSAL + 
+                   PFTFAC + factor(year), data = df)
+
+summary(model_grad)
+```
+
+```{r}
+mean(df$C150_4)
+
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Step 1: Filter for Arkansas
+arkansas_df <- df %>%
+  filter(team == "Arkansas") %>%
+  select(year, win_pct, C150_4)
+
+# Step 2: Reshape data to long format for ggplot
+arkansas_long <- arkansas_df %>%
+  pivot_longer(cols = c(win_pct, C150_4), names_to = "Metric", values_to = "Value")
+
+# Step 3: Plot
+ggplot(arkansas_long, aes(x = year, y = Value, color = Metric)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = "Arkansas: Football Win % and Graduation Rate Over Time",
+       x = "Year",
+       y = "Proportion",
+       color = "Metric") +
+  theme_minimal()
+
+```
+
+```{r}
+
+# Step 1: Filter for Arkansas
+arkansas_df <- df %>%
+  filter(team == "Arkansas") %>%
+  select(year, AVGFACSAL)
+
+# Step 2: Plot
+ggplot(arkansas_df, aes(x = year, y = AVGFACSAL)) +
+  geom_line(color = "steelblue", size = 1.2) +
+  geom_point(color = "steelblue", size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = "Arkansas: Proportion of Full-Time Faculty Over Time",
+       x = "Year",
+       y = "Full-Time Faculty Proportion") +
+  theme_minimal()
+
+```
+
+```{r}
+# Step 1: Filter for Arkansas
+arkansas_df <- df %>%
+  filter(team == "Florida State") %>%
+  select(year, win_pct, C150_4)
+
+# Step 2: Reshape data to long format for ggplot
+arkansas_long <- arkansas_df %>%
+  pivot_longer(cols = c(win_pct, C150_4), names_to = "Metric", values_to = "Value")
+
+# Step 3: Plot
+ggplot(arkansas_long, aes(x = year, y = Value, color = Metric)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = "Arkansas: Football Win % and Graduation Rate Over Time",
+       x = "Year",
+       y = "Proportion",
+       color = "Metric") +
+  theme_minimal()
+
+```
+
+```{r}
+# Step 1: Filter for Arkansas
+arkansas_df <- df %>%
+  filter(team == "Florida State") %>%
+  select(year, PFTFAC)
+
+# Step 2: Plot
+ggplot(arkansas_df, aes(x = year, y = PFTFAC)) +
+  geom_line(color = "steelblue", size = 1.2) +
+  geom_point(color = "steelblue", size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(title = "Arkansas: Proportion of Full-Time Faculty Over Time",
+       x = "Year",
+       y = "Full-Time Faculty Proportion") +
+  theme_minimal()
+```
+
+```{r}
+# Step 1: Create a shifted football performance dataframe
+win_df <- df %>%
+  select(year, team, win_pct) %>%
+  mutate(year = year + 1)  # shift win_pct forward by 1 year
+
+# Step 2: Remove the original win_pct and year columns from the main df
+df_clean <- df %>%
+  select(-win_pct)  # you can also remove `year` here if needed after the join
+
+# Step 3: Perform the inner join to bring in the shifted win_pct
+df_lagged <- df_clean %>%
+  inner_join(win_df, by = c("team", "year"))
+
+df <- df_lagged
+
+```
+
+```{r}
+df1 <- df %>%
+  select(-team, -UGDS_MEN, -won, -lost, -tied, -UNITID)
+df1$year <- as.factor(df1$year)
+
+model <- lm(RET_FT4 ~ ., data = df1)
+
+summary(model)
+
+```
+
+```{r}
+# Step 1: Summarize average UGDS_WOMEN by year
+df_avg_women <- df_lagged %>%
+  group_by(year) %>%
+  summarize(avg_ugds_women = mean(UGDS_WOMEN, na.rm = TRUE))
+
+# Step 2: Plot without 'scales' package
+ggplot(data = df_avg_women, aes(x = year, y = avg_ugds_women)) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  scale_y_continuous(
+    labels = function(x) paste0(round(x * 100), "%")
+  ) +
+  labs(
+    title = "Average Proportion of Undergraduate Women by Year",
+    x = "Year",
+    y = "Average UGDS_WOMEN"
+  ) +
+  theme_minimal()
+
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Summarize average graduation rate (C150_4) by year
+df_avg_grad <- df_lagged %>%
+  group_by(year) %>%
+  summarize(avg_grad_rate = mean(C150_4, na.rm = TRUE))
+
+# Step 2: Plot
+ggplot(data = df_avg_grad, aes(x = year, y = avg_grad_rate)) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  scale_y_continuous(
+    labels = function(x) paste0(round(x * 100), "%")
+  ) +
+  labs(
+    title = "Average 4-Year Graduation Rate by Year",
+    x = "Year",
+    y = "Average Graduation Rate"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Step 1: Summarize average retention rate (RET_FT4) by year
+df_avg_retention <- df_lagged %>%
+  group_by(year) %>%
+  summarize(avg_retention_rate = mean(RET_FT4, na.rm = TRUE))
+
+# Step 2: Plot
+ggplot(data = df_avg_retention, aes(x = year, y = avg_retention_rate)) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  scale_y_continuous(
+    labels = function(x) paste0(round(x * 100), "%")
+  ) +
+  labs(
+    title = "Average First-Year Retention Rate by Year",
+    x = "Year",
+    y = "Average Retention Rate"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+womens <- lm(data = df_lagged, SAT_AVG ~ C150_4 + UGDS_WOMEN + factor(year) + RET_FT4 + PFTFAC + C150_4 * UGDS_WOMEN * RET_FT4 * PFTFAC)
+summary(womens)
+```
+
+```{r}
+womens2 <- lm(data = df_lagged, ACTCMMID ~ C150_4 + UGDS_WOMEN + factor(year) + RET_FT4 + C150_4 * UGDS_WOMEN * RET_FT4)
+summary(womens2)
+```
+
+```{r}
+womens <- lm(data = df_lagged, 
+             C150_4 ~ SAT_AVG + UGDS_ASIAN + UGDS_WOMEN + factor(year) + 
+             RET_FT4 + PFTFAC + SAT_AVG * RET_FT4 * PFTFAC * UGDS_ASIAN * UGDS_WOMEN)
+
+```
+
+```{r}
+# Step 1: Lag faculty and retention by 4 years per school
+df_lagged <- df %>%
+  arrange(UNITID, year) %>%
+  group_by(UNITID) %>%
+  mutate(
+    PFTFAC_lag = lag(PFTFAC, 4),
+    RET_FT4_lag = lag(RET_FT4, 4)
+  ) %>%
+  ungroup()
+
+# Step 2: Create ordered investment level based on lagged values
+df_lagged <- df_lagged %>%
+  mutate(
+    investment_score = PFTFAC_lag + RET_FT4_lag,
+    investment_level = ntile(investment_score, 3),
+    Investment_Level = case_when(
+      investment_level == 1 ~ "Low",
+      investment_level == 2 ~ "Medium",
+      investment_level == 3 ~ "High"
+    ),
+    Investment_Level = factor(Investment_Level, levels = c("Low", "Medium", "High"))
+  )
+
+# Step 3: Compute average graduation rates by investment level
+plot_data2 <- df_lagged %>%
+  filter(!is.na(Investment_Level), !is.na(C150_4)) %>%
+  group_by(Investment_Level) %>%
+  summarize(
+    avg_completion = mean(C150_4, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Step 4: Bar chart
+ggplot(plot_data2, aes(x = Investment_Level, y = avg_completion, fill = Investment_Level)) +
+  geom_col(width = 0.6) +
+  labs(
+    title = "Graduation Rate by Investment",
+    subtitle = "Investment = Faculty% + Retention Rate",
+    x = "Level of Investment",
+    y = "4 Year Graduation Rate",
+    fill = "Investment Level"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+# Basic relationship: SAT vs Grad Rate
+ggplot(df, aes(x = SAT_AVG, y = C150_4)) +
+  geom_smooth(method = "loess", color = "#2c3e50", size = 1, se = FALSE) +
+  labs(
+    title = "SAT Scores vs Expected Graduation Rate",
+    x = "Average SAT Score",
+    y = "Expected Graduation Rate"
+  ) +
+  theme_minimal(base_size = 14)
+
+```
+
+```{r}
+
+model_gender <- lm(
+  C150_4 ~ RET_FT4 * PFTFAC * UGDS_MEN,
+  data = df_lagged
+)
+summary(model_gender)
+
+```
