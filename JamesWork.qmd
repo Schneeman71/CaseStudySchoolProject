@@ -345,6 +345,7 @@ summary(womens2)
 womens <- lm(data = df_lagged, 
              C150_4 ~ SAT_AVG + UGDS_ASIAN + UGDS_WOMEN + factor(year) + 
              RET_FT4 + PFTFAC + SAT_AVG * RET_FT4 * PFTFAC * UGDS_ASIAN * UGDS_WOMEN)
+summary(womens)
 
 ```
 
@@ -416,5 +417,37 @@ model_gender <- lm(
   data = df_lagged
 )
 summary(model_gender)
+
+```
+
+```{r}
+# Step 1: Create a column for estimated minority women proportion
+df <- df |>
+  mutate(
+    minority_prop = UGDS_HISP + UGDS_ASIAN + UGDS_BLACK,
+    minority_women = minority_prop * UGDS_WOMEN
+  )
+
+```
+
+```{r}
+mod <- lm(data = df, C150_4 ~ factor(year) + RET_FT4 * minority_women)
+summary(mod)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(df, aes(x = RET_FT4, y = C150_4, color = minority_women)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = FALSE, size = 1) +
+  scale_color_gradient(low = "#FDD49E", high = "#D7301F", name = "Minority Women\nProportion") +
+  labs(
+    title = "Retention Programs Are More Effective at Minority-Inclusive Institutions",
+    subtitle = "Higher proportion of minority women increases the positive effect of retention on graduation",
+    x = "Retention Rate (RET_FT4)",
+    y = "Graduation Rate (C150_4)"
+  ) +
+  theme_minimal(base_size = 14)
 
 ```
