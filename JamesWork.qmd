@@ -441,7 +441,7 @@ library(ggplot2)
 ggplot(df, aes(x = RET_FT4, y = C150_4, color = minority_women)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm", se = FALSE, size = 1) +
-  scale_color_gradient(low = "orange", high = "red", name = "Minority Proportion") +
+  scale_color_gradient(low = "yellow", high = "darkgreen", name = "Minority Proportion") +
   labs(
     title = "Retention Programs by Female Minority",
     x = "Retention Rate (RET_FT4)",
