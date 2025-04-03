@@ -441,10 +441,9 @@ library(ggplot2)
 ggplot(df, aes(x = RET_FT4, y = C150_4, color = minority_women)) +
   geom_point(alpha = 0.3) +
   geom_smooth(method = "lm", se = FALSE, size = 1) +
-  scale_color_gradient(low = "#FDD49E", high = "#D7301F", name = "Minority Women\nProportion") +
+  scale_color_gradient(low = "orange", high = "red", name = "Minority Proportion") +
   labs(
-    title = "Retention Programs Are More Effective at Minority-Inclusive Institutions",
-    subtitle = "Higher proportion of minority women increases the positive effect of retention on graduation",
+    title = "Retention Programs by Female Minority",
     x = "Retention Rate (RET_FT4)",
     y = "Graduation Rate (C150_4)"
   ) +
