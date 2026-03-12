@@ -10,7 +10,7 @@ In this project, our team acted as data consultants presenting to a university b
 
 Through an analysis of over 50 years of College Scorecard and college football data, we disproved the board's baseline hypothesis and pivoted to a more impactful, data-driven business recommendation focused on student retention and academic infrastructure.
 
-## 📊 Key Insights & Recommendations
+## Key Insights & Recommendations
 
 * **The Football Myth:** We found no statistically significant association between a football program's performance and the quality of student admissions.
 * **Redefining Success:** Our EDA revealed that incoming SAT scores are highly correlated with 4-year graduation rates. We pivoted our objective to use the 4-year graduation rate as the ultimate metric for university success. Since SAT scores don't tell you anything about how a student performed after admission.
