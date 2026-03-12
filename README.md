@@ -39,8 +39,8 @@ We utilized a bilingual tech stack (Python and R) to process the data, perform e
 
 This project was a collaborative effort by our 3-person team. Although every member actively contributed to all phases of the project and joint decision-making, we each took point on specific areas based on our strengths:
 
-James Klein: Data Engineering & Integrity. Leveraged Python and Pandas to lead data cleaning, missing value imputation, and pipeline creation. Partnered on the EDA to ensure our analytical models accurately reflected the underlying imputation methods and maintained data integrity.
+**James Klein**: Data Engineering & Integrity. Leveraged Python and Pandas to lead data cleaning, missing value imputation, and pipeline creation. Partnered on the EDA to ensure our analytical models accurately reflected the underlying imputation methods and maintained data integrity.
 
-Carson Buttars: Exploratory Data Analysis. Partnered closely with James to lead the statistical exploration of the cleaned data in R, uncovering the core trends, and evaluating different analytical approaches.
+**Carson Buttars**: Exploratory Data Analysis. Partnered closely with James to lead the statistical exploration of the cleaned data in R, uncovering the core trends, and evaluating different analytical approaches.
 
-Jamie Herron: Presentation & Visual Synthesis. Contributed to the EDA and took the lead on translating our statistical findings into a compelling business narrative. Designed the final presentation and polished the R/ggplot2 visualizations to effectively communicate our insights to the judges.
+**Jamie Herron**: Presentation & Visual Synthesis. Contributed to the EDA and took the lead on translating our statistical findings into a compelling business narrative. Designed the final presentation and polished the R/ggplot2 visualizations to effectively communicate our insights to the judges.
