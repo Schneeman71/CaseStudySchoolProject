@@ -2,7 +2,7 @@ library(tidyverse)
 
 df <- read_csv("data.csv")
 
-# How much data do we lose by going bask all 20 years?
+# How much data do we lose if we go back 20 years and throw out all older data?
 df$won_Twenty_years_ago %>%
   is.na() %>%
   sum() %>%

@@ -1,15 +1,10 @@
 import pandas as pd
 import numpy as np
 
-# Read in data
 records_df = pd.read_csv("college_football_records.csv")
 scorecard_df = pd.read_csv("combined_scorecard_data.csv")
 
-
-
-##################################
 # Cleaning the Records dataframe #
-##################################
 
 # Make all NAs in the tied column 0
 records_df.loc[records_df.tied.isna(), "tied"] = 0 
@@ -44,10 +39,7 @@ records_df = records_df.astype({"won": "int",
                                 "games": "int"})
 
 
-
-#####################################
 # Cleaning the Scoreboard dataframe #
-#####################################
 
 # Remove completely or very empty columns
 scorecard_df.drop(columns = ["LOCALE2", "PRGMOFR", "MDCOST_ALL", "MDEARN_ALL", "MD_EARN_WNE_P10"], inplace = True)
@@ -159,14 +151,9 @@ new_columns = ["One_year_ago", "Two_years_ago", "Three_years_ago", "Four_years_a
 for i in range(5):
     scorecard_df[new_columns[i]] = scorecard_df["Year"] - (i + 2)
 
-
-
-####################
 # Merge dataframes #
-####################
 
 # Merge in the first year to simplify naming.
-# We'll take it out later.
 df = scorecard_df
 df = df.merge(records_df,
               how = "left",
@@ -189,29 +176,19 @@ df = df.drop(columns = list(records_df.columns))
 # And the # of years back columns
 df = df.drop(columns = new_columns)
 
-# Again ensure the correct types are used
-# integer_cols = [0, 4, 6, 7, 8, 9, 10, 11, 20, 34, 35, 36, 37,
-#                 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-#                 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
-#                 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
-#                 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
-#                 86, 87, 88, 89, 90, 91, 92, 93, 94]
+# Ensure the correct data types are used
+
 integer_cols = ['UNITID', 'Year', 'MAIN', 'NUMBRANCH', 'HIGHDEG', 'REGION', 'LOCALE', 'CCSIZSET', 'ADMCON7',
                 'OPENADMP', 'won_One_year_ago', 'lost_One_year_ago', 'tied_One_year_ago', 'games_One_year_ago',
                 'won_Two_years_ago', 'lost_Two_years_ago', 'tied_Two_years_ago', 'games_Two_years_ago',
                 'won_Three_years_ago', 'lost_Three_years_ago' , 'tied_Three_years_ago', 'games_Three_years_ago',
                 'won_Four_years_ago', 'lost_Four_years_ago', 'tied_Four_years_ago', 'games_Four_years_ago',
                 'won_Five_years_ago', 'lost_Five_years_ago', 'tied_Five_years_ago', 'games_Five_years_ago']
-# df.loc[:, integer_cols] = df.loc[:, integer_cols].astype("Int64")
+
 for col in integer_cols:
     df[col] = df[col].astype("Int64")
 
-
-
-
-####################
-# Write final data #
-####################
+# output final data
 
 df.to_csv("data.csv", index = False)
 
